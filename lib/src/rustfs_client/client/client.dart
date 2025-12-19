@@ -9,7 +9,7 @@ import 'package:xml2json/xml2json.dart';
 import '../model/list_bucket_result.dart';
 import '../model/list_bucket_result_parker.dart';
 
-class AwsS3Client {
+class RustFSClient {
   final String _secretKey;
   final String _accessKey;
   final String _host;
@@ -20,7 +20,7 @@ class AwsS3Client {
 
   static const _service = "s3";
 
-  /// Creates a new AwsS3Client instance.
+  /// Creates a new RustFSClient instance.
   ///
   /// @param secretKey The secret key. Required. see https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html
   /// @param accessKey The access key. Required. see https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html
@@ -29,7 +29,7 @@ class AwsS3Client {
   /// @param region The region of the bucket. Required.
   /// @param sessionToken The session token. Optional.
   /// @param client The http client. Optional. Useful for debugging.
-  AwsS3Client({
+  RustFSClient({
     required String secretKey,
     required String accessKey,
     required String bucketId,

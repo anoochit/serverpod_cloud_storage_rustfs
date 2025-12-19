@@ -1,13 +1,13 @@
 import 'dart:typed_data';
 
 import 'package:serverpod/serverpod.dart';
-import '../aws_s3_client/client/client.dart';
-import '../aws_s3_upload/aws_s3_upload.dart';
+import '../rustfs_client/client/client.dart';
+import '../rustfs_upload/rustfs_upload.dart';
 
 /// Concrete implementation of S3 cloud storage for use with Serverpod.
-class S3CloudStorage extends CloudStorage {
-  late final String _awsAccessKeyId;
-  late final String _awsSecretKey;
+class RustFSCloudStorage extends CloudStorage {
+  late final String _rustFSAccessKeyId;
+  late final String _rustFSSecretKey;
   final String region;
   final String bucket;
   final bool public;
@@ -15,13 +15,13 @@ class S3CloudStorage extends CloudStorage {
   // RustFS public url
   late final String? publicHost;
 
-  late final AwsS3Client _s3Client;
+  late final RustFSClient _s3Client;
 
   // RustFS endpoint url
   final String host;
 
-  /// Creates a new [S3CloudStorage] reference.
-  S3CloudStorage({
+  /// Creates a new [RustFSCloudStorage] reference.
+  RustFSCloudStorage({
     required Serverpod serverpod,
     required String storageId,
     required this.public,
@@ -31,28 +31,30 @@ class S3CloudStorage extends CloudStorage {
     required this.host,
   }) : super(storageId) {
     serverpod.loadCustomPasswords([
-      (envName: 'SERVERPOD_AWS_ACCESS_KEY_ID', alias: 'AWSAccessKeyId'),
-      (envName: 'SERVERPOD_AWS_SECRET_KEY', alias: 'AWSSecretKey'),
+      (envName: 'SERVERPOD_RUSTFS_ACCESS_KEY_ID', alias: 'RustFSAccessKeyId'),
+      (envName: 'SERVERPOD_RUSTFS_SECRET_KEY', alias: 'RustFSSecretKey'),
     ]);
 
-    var awsAccessKeyId = serverpod.getPassword('AWSAccessKeyId');
-    var awsSecretKey = serverpod.getPassword('AWSSecretKey');
+    var awsAccessKeyId = serverpod.getPassword('RustFSAccessKeyId');
+    var awsSecretKey = serverpod.getPassword('RustFSSecretKey');
 
     if (awsAccessKeyId == null) {
-      throw StateError('AWSAccessKeyId must be configured in your passwords.');
+      throw StateError(
+        'RustFSAccessKeyId must be configured in your passwords.',
+      );
     }
 
     if (awsSecretKey == null) {
-      throw StateError('AWSSecretKey must be configured in your passwords.');
+      throw StateError('RustFSSecretKey must be configured in your passwords.');
     }
 
-    _awsAccessKeyId = awsAccessKeyId;
-    _awsSecretKey = awsSecretKey;
+    _rustFSAccessKeyId = awsAccessKeyId;
+    _rustFSSecretKey = awsSecretKey;
 
     // Create client
-    _s3Client = AwsS3Client(
-      accessKey: _awsAccessKeyId,
-      secretKey: _awsSecretKey,
+    _s3Client = RustFSClient(
+      accessKey: _rustFSAccessKeyId,
+      secretKey: _rustFSSecretKey,
       bucketId: bucket,
       region: region,
       host: host,
@@ -69,9 +71,9 @@ class S3CloudStorage extends CloudStorage {
     DateTime? expiration,
     bool verified = true,
   }) async {
-    await AwsS3Uploader.uploadData(
-      accessKey: _awsAccessKeyId,
-      secretKey: _awsSecretKey,
+    await RustFSUploader.uploadData(
+      accessKey: _rustFSAccessKeyId,
+      secretKey: _rustFSSecretKey,
       bucket: bucket,
       region: region,
       data: byteData,
@@ -137,9 +139,9 @@ class S3CloudStorage extends CloudStorage {
     Duration expirationDuration = const Duration(minutes: 10),
     int maxFileSize = 10 * 1024 * 1024,
   }) async {
-    return await AwsS3Uploader.getDirectUploadDescription(
-      accessKey: _awsAccessKeyId,
-      secretKey: _awsSecretKey,
+    return await RustFSUploader.getDirectUploadDescription(
+      accessKey: _rustFSAccessKeyId,
+      secretKey: _rustFSSecretKey,
       bucket: bucket,
       region: region,
       uploadDst: path,

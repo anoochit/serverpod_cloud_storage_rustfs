@@ -9,7 +9,7 @@ import 'package:path/path.dart' as path;
 import 'policy.dart';
 
 /// Convenience class for uploading files to AWS S3
-class AwsS3Uploader {
+class RustFSUploader {
   /// Upload a file, returning the file's public URL on success.
   static Future<String?> uploadFile({
     /// AWS access key
