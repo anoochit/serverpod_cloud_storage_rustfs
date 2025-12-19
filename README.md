@@ -2,12 +2,15 @@
 
 ## What is Serverpod?
 
-Serverpod is an open-source, scalable app server, written in Dart for the Flutter community. Check it out! [Serverpod.dev](https://serverpod.dev)
+Serverpod is an open-source, scalable application server written in Dart, designed specifically for the Flutter ecosystem. It provides a productive backend framework with built-in tooling for APIs, databases, authentication, and file storage.
+
+Learn more at [serverpod.dev](https://serverpod.dev).
 
 ## What is RustFS?
 
-[RustFS](https://github.com/rustfs/rustfs) is an open-source, S3-compatible object storage server.
-It can be used as a drop-in replacement for AWS S3, MinIO, or other S3-compatible services, making it ideal for:
+[RustFS](https://github.com/rustfs/rustfs) is an open-source, S3-compatible object storage server. It can be used as a drop-in replacement for AWS S3, MinIO, and other S3-compatible services, making it a flexible and cost-effective storage solution for many environments.
+
+RustFS is well suited for:
 
 * Local development
 * On-premise deployments
@@ -16,13 +19,41 @@ It can be used as a drop-in replacement for AWS S3, MinIO, or other S3-compatibl
 
 ## Using RustFS (S3-compatible storage)
 
-This section shows how to set up a storage using **RustFS**, an S3-compatible object storage. Before you write your Dart code, you need to set up a RustFS instance and create a bucket.
+This section explains how to configure **RustFS** as a storage backend for Serverpod. Since RustFS implements the S3 API, Serverpod can communicate with it using the same mechanisms as AWS S3.
 
-If you plan to expose files publicly, you may also want to place RustFS behind a reverse proxy or CDN (such as Nginx or Cloudflare) so you can use a custom domain and your own SSL certificate.
+Before writing any Dart code, you need to:
 
-Next, generate an **access key** and **secret key** in RustFS. Add these credentials to your Serverpod password file (`RustFSAccessKeyId` and `RustFSSecretKey`) or provide them as environment variables (`SERVERPOD_RUSTFS_ACCESS_KEY_ID` and `SERVERPOD_RUSTFS_SECRET_KEY`).
+1. Set up a RustFS instance
+2. Create a bucket
+3. Generate an **access key** and **secret key**
 
-When your RustFS setup is ready, include the RustFS client package in your `pubspec.yaml` file and import it in your `server.dart` file. Serverpod will communicate with RustFS through the S3 API, so no additional storage-specific code changes are required beyond configuring the custom endpoint.
+If you plan to expose files publicly, it is recommended to run RustFS behind a reverse proxy or CDN (such as Nginx or Cloudflare). This allows you to use a custom domain and manage TLS/SSL certificates more easily.
+
+### Credentials setup
+
+After creating your access key and secret key in RustFS, add them to your Serverpod password configuration.
+
+You can either:
+
+* Add them to your `passwords.yaml` file, or
+* Provide them as environment variables
+
+Serverpod uses AWS-style credential names for all S3-compatible storage providers.
+
+```yaml
+shared:
+  RustFSAccessKeyId: 'RUSTFS_ACCESS_KEY'
+  RustFSSecretKey: 'RUSTFS_SECRET_KEY'
+```
+
+Alternatively, you can use environment variables:
+
+* `SERVERPOD_RUSTFS_ACCESS_KEY_ID`
+* `SERVERPOD_RUSTFS_SECRET_KEY`
+
+### Adding the RustFS client package
+
+Include the RustFS cloud storage integration in your `pubspec.yaml` file:
 
 ```yaml
 dependencies:
@@ -31,14 +62,20 @@ dependencies:
       url: https://github.com/anoochit/serverpod_cloud_storage_rustfs.git
 ```
 
+Then import it in your `server.dart` file:
+
 ```dart
 import 'package:serverpod_cloud_storage_rustfs/serverpod_cloud_storage_rustfs.dart'
     as rustfs;
 ```
 
-After creating your Serverpod, you add a cloud storage configuration. If you want to replace the default public or private storages, set the `storageId` to `public` or `private`. You should add the cloud storage **before starting your pod**.
+### Configuring cloud storage
 
-When using **RustFS**, you configure it through the same `S3CloudStorage` class, but point it to your RustFS endpoint instead of AWS. If your RustFS instance is exposed via a custom domain (for example, behind Nginx or a CDN), set the `publicHost` accordingly.
+After creating your Serverpod instance, add a cloud storage configuration **before starting the pod**.
+
+If you want to replace the default `public` or `private` storage, set `storageId` accordingly.
+
+When using **RustFS**, you configure storage in the same way as S3, but point it to your RustFS endpoint instead of AWS. If RustFS is exposed via a custom domain, set `publicHost` to that domain.
 
 ```dart
 pod.addCloudStorage(
@@ -49,36 +86,28 @@ pod.addCloudStorage(
     region: 'us-west-2',
     bucket: 'mybucket',
     host: 'd0beb585a210.ngrok-free.app', // RustFS endpoint
-    publicHost: 'd0beb585a210.ngrok-free.app', // RustFS public host
+    publicHost: 'd0beb585a210.ngrok-free.app', // Public host
   ),
 );
 ```
 
-> **Note** For S3-compatible services like RustFS, the `region` value is not validated and can be set to any valid AWS region string.
+> **Note**
+> For S3-compatible services such as RustFS, the `region` value is not strictly validated and can be set to any valid AWS region string.
 
-### Credentials configuration
+## Uploading files
 
-For the storage configuration to work, you must also add your **RustFS access key and secret key** to the `passwords.yaml` file. Serverpod reuses AWS-style credential names for all S3-compatible storage providers.
+By default, Serverpod provides **public** and **private** file storage backed by the database. These defaults can be replaced or extended using RustFS or any other S3-compatible storage service.
 
-```yaml
-shared:
-  RustFSAccessKeyId: 'RUSTFS_ACCESS_KEY'
-  RustFSSecretKey: 'RUSTFS_SECRET_KEY'
-```
-
-You generate these credentials from your RustFS configuration (or environment variables if running via Docker). Once configured, Serverpod will communicate with RustFS using the standard S3 API, without requiring any further code changes.
-
-## How to upload a file
-
-Serverpod sets up a **public** and **private** file storage by default using the database. You can replace these defaults or add additional storage configurations backed by **RustFS** or any other S3-compatible service.
-
-Once RustFS is configured using `RustFSCloudStorage`, file uploads work exactly the same as with AWS S3.
+Once RustFS is configured via `RustFSCloudStorage`, file uploads work exactly the same as with AWS S3.
 
 ## Server-side code
 
-Uploading a file requires a few steps. First, you create an **upload description** on the server and pass it to the client. This description grants temporary permission for the client to upload a file directly to RustFS.
+Uploading a file involves two main steps:
 
-In the simplest case, you can allow uploads to any path, though in production you should usually restrict allowed paths.
+1. Creating an **upload description** on the server
+2. Verifying the upload after it completes
+
+The upload description grants the client temporary permission to upload a file directly to RustFS.
 
 ```dart
 Future<String?> getUploadDescription(Session session, String path) async {
@@ -89,8 +118,7 @@ Future<String?> getUploadDescription(Session session, String path) async {
 }
 ```
 
-After the upload is completed, you should **verify the upload**.
-When uploading directly to third-party storage such as **RustFS**, this is the only reliable way to know whether the upload succeeded or was canceled.
+After the upload finishes, you must verify it. When uploading directly to third-party storage like RustFS, this is the only reliable way to determine whether the upload succeeded or was canceled.
 
 ```dart
 Future<bool> verifyUpload(Session session, String path) async {
@@ -103,9 +131,9 @@ Future<bool> verifyUpload(Session session, String path) async {
 
 ## Client-side code
 
-On the client side, you first request the upload description from your server. Then you upload the file using the provided upload information.
+On the client, you first request an upload description from the server. Then you upload the file using the provided information.
 
-You can upload from either a `Stream` or a `ByteData` object. For large files, using a `Stream` is recommended to avoid holding the entire file in memory.
+Uploads can be performed using either a `Stream` or a `ByteData` object. For large files, using a `Stream` is recommended to avoid loading the entire file into memory.
 
 Finally, verify the upload with the server.
 
@@ -122,15 +150,15 @@ if (uploadDescription != null) {
 
 ## File path best practices (important for RustFS)
 
-In a real-world application, file paths should typically be **generated on the server**, not by the client.
+In production applications, file paths should typically be **generated on the server**, not provided by the client.
 
-For compatibility with **RustFS and S3-style object storage**:
+For compatibility with **RustFS and S3-style object storage**, follow these rules:
 
 * Do **not** use a leading slash
-* Use only standard characters, numbers, and `/`
+* Use only alphanumeric characters and `/`
 * Avoid spaces and special characters
 
-Example of a valid path:
+Example of a valid file path:
 
 ```dart
 'profile/$userId/images/avatar.png'
@@ -138,7 +166,7 @@ Example of a valid path:
 
 ## Accessing stored files
 
-You can easily check whether a file exists, retrieve it, or generate a public URL.
+Serverpod provides convenient APIs for checking file existence, retrieving files, and generating public URLs.
 
 ### Check if a file exists
 
@@ -151,8 +179,7 @@ var exists = await session.storage.fileExists(
 
 ### Get a public URL (public storage only)
 
-If the file is stored in a **public** RustFS bucket, it can be accessed via a URL.
-If you configured `publicHost`, the returned URL will use your custom domain.
+Files stored in a **public** RustFS bucket can be accessed via a URL. If `publicHost` is configured, the returned URL will use your custom domain.
 
 ```dart
 var url = await session.storage.getPublicUrl(
@@ -163,7 +190,7 @@ var url = await session.storage.getPublicUrl(
 
 ### Retrieve a file on the server
 
-You can also retrieve the file directly from your server code.
+You can also retrieve the file directly in server-side code:
 
 ```dart
 var myByteData = await session.storage.retrieveFile(
