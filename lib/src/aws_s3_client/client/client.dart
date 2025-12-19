@@ -198,14 +198,18 @@ UNSIGNED-PAYLOAD
     required String key,
     Map<String, String>? queryParams,
   }) async {
-    final SignedRequestParams params = buildSignedParams(
-      key: key,
-      queryParams: queryParams,
-    );
+    // final SignedRequestParams params = buildSignedParams(
+    //   key: key,
+    //   queryParams: queryParams,
+    // );
 
-    print('> _doSignedGetRequest-uri: ${params.uri}');
-    print('> _doSignedGetRequest-headers: ${params.headers}');
-    return _client.get(params.uri, headers: params.headers);
+    // print('> _doSignedGetRequest-uri: ${params.uri}');
+    // print('> _doSignedGetRequest-headers: ${params.headers}');
+    // return _client.get(params.uri, headers: params.headers);
+
+    final url = buildPresignedGetObjectUrl(key: key);
+    print('> _doSignedGetRequest: $url');
+    return _client.get(url);
   }
 
   Future<Response> _doSignedHeadRequest({
@@ -222,8 +226,7 @@ UNSIGNED-PAYLOAD
     // return _client.head(params.uri, headers: params.headers);
 
     final url = buildPresignedGetObjectUrl(key: key);
-    print('> $url');
-    print('> ${queryParams}');
+    print('> _doSignedHeadRequest: $url');
     return _client.get(url);
   }
 

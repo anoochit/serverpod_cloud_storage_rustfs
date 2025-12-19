@@ -13,7 +13,7 @@ class S3CloudStorage extends CloudStorage {
   final bool public;
 
   // RustFS public url
-  late final String publicHost;
+  late final String? publicHost;
 
   late final AwsS3Client _s3Client;
 
@@ -27,7 +27,7 @@ class S3CloudStorage extends CloudStorage {
     required this.public,
     required this.region,
     required this.bucket,
-    required this.publicHost,
+    String? publicHost,
     required this.host,
   }) : super(storageId) {
     serverpod.loadCustomPasswords([
@@ -57,6 +57,8 @@ class S3CloudStorage extends CloudStorage {
       region: region,
       host: host,
     );
+
+    this.publicHost = publicHost ?? '$host$bucket';
   }
 
   @override
@@ -97,8 +99,10 @@ class S3CloudStorage extends CloudStorage {
     required String path,
   }) async {
     if (await fileExists(session: session, path: path)) {
-      return Uri.parse('https://$publicHost/$bucket/$path');
-      // return Uri.parse('$publicHost/$path');
+      var url = _s3Client.buildPresignedGetObjectUrl(key: path);
+      return url;
+      // return Uri.parse('https://$publicHost/$bucket/$path');
+      // return Uri.parse('https://$publicHost/$path');
     }
     return null;
   }
