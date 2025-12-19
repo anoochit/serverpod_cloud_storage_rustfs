@@ -27,7 +27,7 @@ class S3CloudStorage extends CloudStorage {
     required this.public,
     required this.region,
     required this.bucket,
-    String? publicHost,
+    this.publicHost,
     required this.host,
   }) : super(storageId) {
     serverpod.loadCustomPasswords([
@@ -58,7 +58,7 @@ class S3CloudStorage extends CloudStorage {
       host: host,
     );
 
-    this.publicHost = publicHost ?? '$host$bucket';
+    // this.publicHost = publicHost ?? '$host$bucket';
   }
 
   @override
@@ -99,8 +99,13 @@ class S3CloudStorage extends CloudStorage {
     required String path,
   }) async {
     if (await fileExists(session: session, path: path)) {
-      var url = _s3Client.buildPresignedGetObjectUrl(key: path);
-      return url;
+      if (publicHost == null) {
+        // use presigned url
+        var url = _s3Client.buildPresignedGetObjectUrl(key: path);
+        return url;
+      } else {
+        return Uri.parse('https://$publicHost/$bucket/$path');
+      }
       // return Uri.parse('https://$publicHost/$bucket/$path');
       // return Uri.parse('https://$publicHost/$path');
     }
