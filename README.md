@@ -25,6 +25,7 @@ Next, generate an **access key** and **secret key** in RustFS. Add these credent
 When your RustFS setup is ready, include the RustFS client package in your `pubspec.yaml` file and import it in your `server.dart` file. Serverpod will communicate with RustFS through the S3 API, so no additional storage-specific code changes are required beyond configuring the custom endpoint.
 
 ```yaml
+dependencies:
   serverpod_cloud_storage_rustfs:
     git:
       url: https://github.com/anoochit/serverpod_cloud_storage_rustfs.git
@@ -41,14 +42,15 @@ When using **RustFS**, you configure it through the same `S3CloudStorage` class,
 
 ```dart
 pod.addCloudStorage(
-    rustfs.RustFSCloudStorage(
-        serverpod: pod,
-        storageId: 'public',
-        public: true,
-        region: 'us-west-2',
-        bucket: 'mybucket',
-        host: '7de844ffe19c.ngrok-free.app', // RustFS host
-    ),
+  rustfs.RustFSCloudStorage(
+    serverpod: pod,
+    storageId: 'public',
+    public: true,
+    region: 'us-west-2',
+    bucket: 'mybucket',
+    host: 'd0beb585a210.ngrok-free.app', // RustFS endpoint
+    publicHost: 'd0beb585a210.ngrok-free.app', // RustFS public host
+  ),
 );
 ```
 
