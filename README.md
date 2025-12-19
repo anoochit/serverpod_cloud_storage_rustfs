@@ -1,16 +1,20 @@
 ![Serverpod banner](https://github.com/serverpod/serverpod/raw/main/misc/images/github-header.webp)
 
-# Serverpod
-
-This package is a core part of Serverpod. For documentation, visit: [https://docs.serverpod.dev](https://docs.serverpod.dev).
-
 ## What is Serverpod?
 
-Serverpod is an open-source, scalable app server, written in Dart for the Flutter community. Check it out!
+Serverpod is an open-source, scalable app server, written in Dart for the Flutter community. Check it out! [Serverpod.dev](https://serverpod.dev)
 
-[Serverpod.dev](https://serverpod.dev)
+## What is RustFS?
 
-### Using RustFS (S3-compatible storage)
+[RustFS](https://github.com/rustfs/rustfs) is an open-source, S3-compatible object storage server.
+It can be used as a drop-in replacement for AWS S3, MinIO, or other S3-compatible services, making it ideal for:
+
+* Local development
+* On-premise deployments
+* Private cloud environments
+* Cost-effective production setups
+
+## Using RustFS (S3-compatible storage)
 
 This section shows how to set up a storage using **RustFS**, an S3-compatible object storage. Before you write your Dart code, you need to set up a RustFS instance and create a bucket.
 
